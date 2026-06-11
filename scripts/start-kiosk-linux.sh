@@ -19,7 +19,7 @@ xset s off
 xset s noblank
 xset -dpms
 
-CHROME_BIN=$(command -v chromium-browser || command -v chromium || command -v google-chrome)
+CHROME_BIN=$(command -v chromium-browser || command -v chromium || command -v google-chrome || echo /usr/lib/chromium/chromium)
 
 exec "$CHROME_BIN" \
   --kiosk \
