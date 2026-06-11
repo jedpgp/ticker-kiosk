@@ -1,0 +1,17 @@
+[Unit]
+Description=Bitcoin Ticker Kiosk - Node server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/YOUR_USERNAME/bitcoin-ticker
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/node /home/YOUR_USERNAME/bitcoin-ticker/dist/server.cjs
+Restart=always
+RestartSec=5
+User=YOUR_USERNAME
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+[Unit]
+Description=Bitcoin Ticker Kiosk - Browser display
+After=bitcoin-ticker.service graphical.target
+Requires=bitcoin-ticker.service
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/YOUR_USERNAME/.Xauthority
+ExecStart=/opt/bitcoin-ticker/scripts/start-kiosk-linux.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target

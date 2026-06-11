@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Bitcoin Ticker Kiosk
+Exec=/home/YOUR_USERNAME/bitcoin-ticker/scripts/start-kiosk-linux.sh
+X-GNOME-Autostart-enabled=true
+NoDisplay=false
+Comment=Launches the Bitcoin ticker in a fullscreen Chromium kiosk
