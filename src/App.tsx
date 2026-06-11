@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Flame, 
@@ -38,6 +38,46 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [localTimezone, setLocalTimezone] = useState<string>("UTC");
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Track which block heights have already triggered the Ocean chime
+  const chimiedHeights = useRef<Set<number>>(new Set());
+  const chimeInitialized = useRef(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const playOceanChime = () => {
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume();
+
+      const playBell = (freq: number, startTime: number, duration: number, vol: number) => {
+        const osc = ctx.createOscillator();
+        const harm = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        harm.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, startTime);
+        harm.type = "sine";
+        harm.frequency.setValueAtTime(freq * 2, startTime);
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(vol, startTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.start(startTime); osc.stop(startTime + duration);
+        harm.start(startTime); harm.stop(startTime + duration);
+      };
+
+      const t = ctx.currentTime;
+      playBell(523.25, t,        2.2, 0.22); // C5
+      playBell(659.25, t + 0.25, 2.2, 0.22); // E5
+      playBell(783.99, t + 0.5,  2.8, 0.28); // G5
+    } catch (e) {
+      console.warn("Ocean chime failed:", e);
+    }
+  };
 
   // Poll server cached ticker data, falling back to direct browser calls if Node server is loading/offline
   const fetchData = async (silent = false) => {
@@ -187,6 +227,28 @@ export default function App() {
       coinbaseAscii.toUpperCase().includes("OCEAN.XYZ")
     );
   };
+
+  // Chime when a new Ocean block appears (not on initial load)
+  useEffect(() => {
+    const blocks = data?.recentBlocks;
+    if (!blocks?.length) return;
+
+    if (!chimeInitialized.current) {
+      blocks.forEach(b => chimiedHeights.current.add(b.height));
+      chimeInitialized.current = true;
+      return;
+    }
+
+    let shouldChime = false;
+    blocks.forEach(block => {
+      if (!chimiedHeights.current.has(block.height)) {
+        chimiedHeights.current.add(block.height);
+        if (isOceanMined(block)) shouldChime = true;
+      }
+    });
+
+    if (shouldChime) playOceanChime();
+  }, [data]);
 
   // Get median fee in sat/vB using block.extras medianFee or estimating it
   const getMedianFee = (block: any) => {
