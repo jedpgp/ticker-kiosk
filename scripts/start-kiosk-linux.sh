@@ -28,6 +28,7 @@ exec "$CHROME_BIN" \
   --no-first-run \
   --disable-translate \
   --disable-session-crashed-bubble \
+  --autoplay-policy=no-user-gesture-required \
   --overscroll-history-navigation=0 \
   --check-for-update-interval=31536000 \
   "$URL"
